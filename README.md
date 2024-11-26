@@ -1,2 +1,3 @@
-# Example
-An example greeter plugin
+# Bank locks
+
+Prevent accidentally banking items.
