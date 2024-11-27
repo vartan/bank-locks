@@ -1,5 +1,10 @@
 package com.vartan.BankLocks;
 
+import net.runelite.api.widgets.WidgetItem;
+import net.runelite.client.ui.FontManager;
+import net.runelite.client.ui.overlay.WidgetItemOverlay;
+
+import javax.inject.Inject;
 import java.awt.*;
 
 public class BankLocksOverlay extends WidgetItemOverlay {
