@@ -1,4 +1,4 @@
-# Bank locks
+# Bank Locks
 
 Prevent accidentally banking items.
 
