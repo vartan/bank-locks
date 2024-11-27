@@ -98,7 +98,7 @@ public class BankLocksPlugin extends Plugin {
 
     private void preventDepositItem(MenuOptionClicked event, String option, Widget widget) {
         int itemId = InterfaceUtil.getItemIdOrChildItemId(event.getWidget());
-        if (itemId <= 1) {
+        if (itemId < 0) {
             return;
         }
 
@@ -213,7 +213,7 @@ public class BankLocksPlugin extends Plugin {
         }
         // TODO: Consider unlock-all right click on deposit-all buttons.
         int itemId = InterfaceUtil.getItemIdOrChildItemId(event.getMenuEntry().getWidget());
-        if (itemId < 1
+        if (itemId < 0
                 || !isInLockableInterface(event.getMenuEntry().getWidget())
                 || !event.getOption().contains("Examine")) {
             return;
