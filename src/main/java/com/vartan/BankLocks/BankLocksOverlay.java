@@ -51,11 +51,11 @@ public class BankLocksOverlay extends WidgetItemOverlay {
         int x = (int) location.getX();
         int y = (int) location.getY();
         float opacity = (float) Math.max(0, Math.min(1, config.lockOpacity()));
-        if(plugin.lockImage != null && opacity > 0f) {
+        if (plugin.lockImage != null && opacity > 0f) {
             // Draw transparent lock over the item.
             AlphaComposite composite = AlphaComposite.getInstance(AlphaComposite.SRC_OVER, opacity);
             graphics.setComposite(composite);
-            graphics.drawImage(plugin.lockImage, x + width/2, y + height/2, width/2, height/2, null);
+            graphics.drawImage(plugin.lockImage, x + width / 2, y + height / 2, width / 2, height / 2, null);
         }
     }
 }

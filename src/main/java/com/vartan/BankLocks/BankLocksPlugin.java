@@ -8,8 +8,9 @@ import com.vartan.BankLocks.util.SetUtil;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 import net.runelite.api.*;
-import net.runelite.api.events.*;
-import net.runelite.api.widgets.ComponentID;
+import net.runelite.api.events.GameStateChanged;
+import net.runelite.api.events.MenuEntryAdded;
+import net.runelite.api.events.MenuOptionClicked;
 import net.runelite.api.widgets.Widget;
 import net.runelite.client.config.ConfigManager;
 import net.runelite.client.eventbus.Subscribe;
@@ -21,7 +22,9 @@ import net.runelite.client.util.Text;
 
 import javax.inject.Inject;
 import java.awt.image.BufferedImage;
-import java.util.*;
+import java.util.Arrays;
+import java.util.HashSet;
+import java.util.Set;
 import java.util.stream.Collectors;
 
 @Slf4j
@@ -29,43 +32,14 @@ import java.util.stream.Collectors;
         name = "Bank Locks"
 )
 public class BankLocksPlugin extends Plugin {
-    /** Interfaces from which you can deposit items. */
-    private static final Set<Integer> LOCKED_INTERFACES = Set.of(
-            ComponentID.BANK_INVENTORY_ITEM_CONTAINER,
-            ComponentID.DEPOSIT_BOX_INVENTORY_ITEM_CONTAINER,
-            ComponentID.BANK_EQUIPMENT_PARENT,
-            ComponentID.BANK_INVENTORY_EQUIPMENT_ITEM_CONTAINER
-    );
-    /** Interfaces from which you can lock items from being deposited. */
-    public static final Set<Integer> LOCKABLE_INTERFACES = Set.of(
-            ComponentID.INVENTORY_CONTAINER,
-            ComponentID.EQUIPMENT_INVENTORY_ITEM_CONTAINER,
-
-            // Locked interfaces are also lockable. TODO: Compose this from 2 lists instead
-            // of copying these ids over.
-            ComponentID.BANK_INVENTORY_ITEM_CONTAINER,
-            ComponentID.DEPOSIT_BOX_INVENTORY_ITEM_CONTAINER,
-            ComponentID.BANK_EQUIPMENT_PARENT,
-            ComponentID.BANK_INVENTORY_EQUIPMENT_ITEM_CONTAINER
-    );
-
-    /** Identifiers for deposit all inventory buttons. */
-    private static final Set<Integer> DEPOSIT_INVENTORY_COMPONENT_IDS = Set.of(
-            ComponentID.BANK_DEPOSIT_INVENTORY,
-            MoreComponentIDs.DEPOSIT_BOX_DEPOSIT_INVENTORY
-    );
-
-    /** Identifiers for deposit all equipment buttons. */
-    private static final Set<Integer> DEPOSIT_EQUIPMENT_COMPONENT_IDS = Set.of(
-            ComponentID.BANK_DEPOSIT_EQUIPMENT,
-            MoreComponentIDs.DEPOSIT_BOX_DEPOSIT_EQUIPMENT
-    );
-
+    /**
+     * Lock image used by the overlay. Must be generated from the main thread.
+     */
+    BufferedImage lockImage;
     @Inject
     private ConfigManager configManager;
     @Inject
     private ItemManager itemManager;
-
     @Inject
     private Client client;
     @Inject
@@ -74,16 +48,8 @@ public class BankLocksPlugin extends Plugin {
     private BankLocksOverlay overlay;
     @Inject
     private OverlayManager overlayManager;
-
     @Getter
     private Set<Integer> lockedItemIds = new HashSet<>();
-
-    /** Lock image used by the overlay. Must be generated from the main thread. */
-    BufferedImage lockImage;
-
-    public BankLocksPlugin() {
-        super();
-    }
 
     @Override
     protected void startUp() throws Exception {
@@ -109,7 +75,9 @@ public class BankLocksPlugin extends Plugin {
         String commaSeparatedItemIds = configManager.getConfiguration(BankLocksConfig.CONFIG_GROUP,
                 BankLocksConfig.LOCKED_ITEMS_CONFIG_NAME);
         if (commaSeparatedItemIds != null) {
-            lockedItemIds = Arrays.stream(commaSeparatedItemIds.split(",")).map(Integer::parseInt).collect(Collectors.toSet());
+            lockedItemIds = Arrays.stream(commaSeparatedItemIds.split(","))
+                    .map(Integer::parseInt)
+                    .collect(Collectors.toSet());
         }
     }
 
@@ -141,25 +109,31 @@ public class BankLocksPlugin extends Plugin {
         }
     }
 
+    /**
+     * Prevents depositing all inventory items or equipment.
+     */
     private boolean preventDepositAll(MenuOptionClicked event, int widgetId) {
-        if(config.preventDepositAll()) {
-            if (DEPOSIT_INVENTORY_COMPONENT_IDS.contains(widgetId)) {
-                int itemId = shouldPreventDepositAll(InventoryID.INVENTORY);
-                if (itemId > 0) {
-                    preventMenuOptionClicked(event, itemId);
-                }
-                return true;
-            } else if (DEPOSIT_EQUIPMENT_COMPONENT_IDS.contains(widgetId)) {
-                int itemId = shouldPreventDepositAll(InventoryID.EQUIPMENT);
-                if (itemId > 0) {
-                    preventMenuOptionClicked(event, itemId);
-                }
+        if (config.preventDepositAll()) {
+            InventoryID inventoryID = null;
+            if (MoreComponentIDs.DEPOSIT_INVENTORY_COMPONENT_IDS.contains(widgetId)) {
+                inventoryID = InventoryID.INVENTORY;
+            } else if (MoreComponentIDs.DEPOSIT_EQUIPMENT_COMPONENT_IDS.contains(widgetId)) {
+                inventoryID = InventoryID.EQUIPMENT;
+            } else {
+                return false;
+            }
+            int itemId = shouldPreventDepositAll(inventoryID);
+            if (itemId > 0) {
+                preventMenuOptionClicked(event, itemId);
                 return true;
             }
         }
         return false;
     }
 
+    /**
+     * Returns the first locked item ID in an inventory (or equipment).
+     */
     private int shouldPreventDepositAll(InventoryID id) {
         ItemContainer itemContainer = client.getItemContainer(id);
         if (itemContainer == null) {
@@ -174,7 +148,9 @@ public class BankLocksPlugin extends Plugin {
         return -1;
     }
 
-
+    /**
+     * Prevents the menu option from being clicked and notifies the user which item blocked it.
+     */
     private void preventMenuOptionClicked(MenuOptionClicked event, int itemId) {
         if (config.playSoundWhenPrevented()) {
             client.playSoundEffect(SoundEffects.GE_TRADE_ERROR);
@@ -187,14 +163,23 @@ public class BankLocksPlugin extends Plugin {
         event.consume();
     }
 
+    /**
+     * Checks whether a widget is a child of a locked widget.
+     */
     private boolean isInLockedInterface(Widget widget) {
-        return InterfaceUtil.anyInterfaceContainsWidget(LOCKED_INTERFACES, widget, client);
+        return InterfaceUtil.anyInterfaceContainsWidget(MoreComponentIDs.LOCKED_INTERFACES, widget, client);
     }
 
+    /**
+     * Checks whether a widget is in a lockable interface.
+     */
     private boolean isInLockableInterface(Widget widget) {
-        return InterfaceUtil.anyInterfaceContainsWidget(LOCKABLE_INTERFACES, widget, client);
+        return InterfaceUtil.anyInterfaceContainsWidget(MoreComponentIDs.LOCKABLE_INTERFACES, widget, client);
     }
 
+    /**
+     * Returns the item ID if the widget clicked is a locked item in a locked interface.
+     */
     private boolean shouldPreventDeposit(Widget widget, int itemId) {
         if (!isInLockedInterface(widget)) {
             return false;
@@ -202,13 +187,12 @@ public class BankLocksPlugin extends Plugin {
         return lockedItemIds.contains(itemId);
     }
 
-
     @Subscribe
     public void onGameStateChanged(GameStateChanged gameStateChanged) {
         GameState gameState = gameStateChanged.getGameState();
         if (gameState == GameState.LOGGED_IN) {
             loadLockedItems();
-            if(lockImage == null) {
+            if (lockImage == null) {
                 lockImage = itemManager.getImage(ItemID.GOLD_LOCKS);
             }
         }
@@ -219,6 +203,9 @@ public class BankLocksPlugin extends Plugin {
         return configManager.getConfig(BankLocksConfig.class);
     }
 
+    /**
+     * Adds "Bank-unlock" and "Bank-lock" options to items.
+     */
     @Subscribe
     public void onMenuEntryAdded(MenuEntryAdded event) {
         if (config.holdShiftForLockAndUnlock() && !client.isKeyPressed(KeyCode.KC_SHIFT)) {
@@ -241,6 +228,5 @@ public class BankLocksPlugin extends Plugin {
                     SetUtil.toggleItem(lockedItemIds, itemId);
                     saveLockedItems();
                 });
-
     }
 }
