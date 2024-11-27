@@ -1,10 +1,5 @@
 package com.vartan.BankLocks;
 
-import net.runelite.api.widgets.WidgetItem;
-import net.runelite.client.ui.FontManager;
-import net.runelite.client.ui.overlay.WidgetItemOverlay;
-
-import javax.inject.Inject;
 import java.awt.*;
 
 public class BankLocksOverlay extends WidgetItemOverlay {
@@ -18,24 +13,7 @@ public class BankLocksOverlay extends WidgetItemOverlay {
         this.config = config;
         showOnInventory();
         showOnEquipment();
-        showOnInterfaces(
-                786516,
-                786517,
-                786518,
-                786519,
-                786520,
-                786521,
-                786522,
-                786523,
-                786524,
-                786525,
-                786526,
-                786527
-        );
-//        for(int interfaceId : plugin.LOCKABLE_INTERFACES) {
-//            showOnInterfaces(interfaceId);
-//        }
-//        showOnInterfaces(12);
+        // TODO: Figure out how to get this working on bank equipment inventory.
     }
 
     @Override
