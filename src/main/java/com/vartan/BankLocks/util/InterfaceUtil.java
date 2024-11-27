@@ -18,4 +18,20 @@ public class InterfaceUtil {
         }
         return false;
     }
+    public static int getItemIdOrChildItemId(Widget widget) {
+        if (widget == null) {
+            return -1;
+        }
+        int itemId = widget.getItemId();
+
+        if (itemId > 0) {
+            return itemId;
+        }
+        Widget[] children = widget.getChildren();
+        if (children != null && children.length > 1) {
+            // Equipment tab has the item ID as the 2nd child.
+            return children[1].getItemId();
+        }
+        return -1;
+    }
 }

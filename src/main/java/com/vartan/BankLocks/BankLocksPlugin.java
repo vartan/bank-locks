@@ -81,9 +81,6 @@ public class BankLocksPlugin extends Plugin {
     /** Lock image used by the overlay. Must be generated from the main thread. */
     BufferedImage lockImage;
 
-    /** Whether we should write the locked item list to a file when logging out. */
-    private boolean dirtyConfig = false;
-
     public BankLocksPlugin() {
         super();
     }
@@ -95,16 +92,10 @@ public class BankLocksPlugin extends Plugin {
 
     @Override
     protected void shutDown() throws Exception {
-        if (client.getGameState() == GameState.LOGGED_IN) {
-            save();
-        }
         overlayManager.remove(overlay);
     }
 
-    private void save() {
-        if (!dirtyConfig) {
-            return;
-        }
+    private void saveLockedItems() {
         String commaSeparatedItemIds = lockedItemIds
                 .stream()
                 .map(String::valueOf)
@@ -112,11 +103,9 @@ public class BankLocksPlugin extends Plugin {
         configManager.setConfiguration(BankLocksConfig.CONFIG_GROUP,
                 BankLocksConfig.LOCKED_ITEMS_CONFIG_NAME,
                 commaSeparatedItemIds);
-        dirtyConfig = false;
-
     }
 
-    private void load() {
+    private void loadLockedItems() {
         String commaSeparatedItemIds = configManager.getConfiguration(BankLocksConfig.CONFIG_GROUP,
                 BankLocksConfig.LOCKED_ITEMS_CONFIG_NAME);
         if (commaSeparatedItemIds != null) {
@@ -140,7 +129,7 @@ public class BankLocksPlugin extends Plugin {
     }
 
     private void preventDepositItem(MenuOptionClicked event, String option, Widget widget) {
-        int itemId = getItemIdOrChildItemId(event.getWidget());
+        int itemId = InterfaceUtil.getItemIdOrChildItemId(event.getWidget());
         if (itemId <= 1) {
             return;
         }
@@ -218,12 +207,10 @@ public class BankLocksPlugin extends Plugin {
     public void onGameStateChanged(GameStateChanged gameStateChanged) {
         GameState gameState = gameStateChanged.getGameState();
         if (gameState == GameState.LOGGED_IN) {
-            load();
+            loadLockedItems();
             if(lockImage == null) {
-                lockImage = itemManager.getImage(25454);
+                lockImage = itemManager.getImage(ItemID.GOLD_LOCKS);
             }
-        } else {
-            save();
         }
     }
 
@@ -232,30 +219,13 @@ public class BankLocksPlugin extends Plugin {
         return configManager.getConfig(BankLocksConfig.class);
     }
 
-    private int getItemIdOrChildItemId(Widget widget) {
-        if (widget == null) {
-            return -1;
-        }
-        int itemId = widget.getItemId();
-
-        if (itemId > 0) {
-            return itemId;
-        }
-        Widget[] children = widget.getChildren();
-        if (children != null && children.length > 1) {
-            // Equipment tab has the item ID as the 2nd child.
-            return children[1].getItemId();
-        }
-        return -1;
-    }
-
     @Subscribe
     public void onMenuEntryAdded(MenuEntryAdded event) {
         if (config.holdShiftForLockAndUnlock() && !client.isKeyPressed(KeyCode.KC_SHIFT)) {
             return;
         }
         // TODO: Consider unlock-all right click on deposit-all buttons.
-        int itemId = getItemIdOrChildItemId(event.getMenuEntry().getWidget());
+        int itemId = InterfaceUtil.getItemIdOrChildItemId(event.getMenuEntry().getWidget());
         if (itemId < 1
                 || !isInLockableInterface(event.getMenuEntry().getWidget())
                 || !event.getOption().contains("Examine")) {
@@ -269,7 +239,7 @@ public class BankLocksPlugin extends Plugin {
                 .onClick(e ->
                 {
                     SetUtil.toggleItem(lockedItemIds, itemId);
-                    dirtyConfig = true;
+                    saveLockedItems();
                 });
 
     }
