@@ -123,7 +123,7 @@ public class BankLocksPlugin extends Plugin {
                 return false;
             }
             int itemId = shouldPreventDepositAll(inventoryID);
-            if (itemId > 0) {
+            if (itemId >= 0) {
                 preventMenuOptionClicked(event, itemId);
                 return true;
             }
