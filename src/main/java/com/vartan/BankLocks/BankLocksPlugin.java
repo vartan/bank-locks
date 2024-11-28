@@ -54,7 +54,6 @@ public class BankLocksPlugin extends Plugin {
      * Set of item IDs that should not be banked.
      * This is persisted across sessions via (save|load)LockedItems methods.
      */
-    @Getter
     private Set<Integer> lockedItemIds = new HashSet<>();
 
     @Provides
@@ -102,7 +101,7 @@ public class BankLocksPlugin extends Plugin {
                 || !InterfaceUtil.isInLockableInterface(event.getMenuEntry().getWidget(), client)) {
             return;
         }
-        String menuOption = lockedItemIds.contains(itemId) ? "Bank-unlock" : "Bank-lock";
+        String menuOption = isItemLocked(itemId) ? "Bank-unlock" : "Bank-lock";
         client.createMenuEntry(-1)
                 .setOption(menuOption)
                 .setTarget(event.getTarget())
@@ -177,7 +176,7 @@ public class BankLocksPlugin extends Plugin {
         }
         for (Item item : itemContainer.getItems()) {
             int itemId = item.getId();
-            if (lockedItemIds.contains(itemId)) {
+            if (isItemLocked(itemId)) {
                 return itemId;
             }
         }
@@ -206,6 +205,10 @@ public class BankLocksPlugin extends Plugin {
         if (!InterfaceUtil.isInLockedInterface(widget, client)) {
             return false;
         }
+        return lockedItemIds.contains(itemId);
+    }
+
+    public boolean isItemLocked(int itemId) {
         return lockedItemIds.contains(itemId);
     }
 }
