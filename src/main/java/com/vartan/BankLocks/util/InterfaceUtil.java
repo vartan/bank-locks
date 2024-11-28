@@ -1,5 +1,6 @@
 package com.vartan.BankLocks.util;
 
+import com.vartan.BankLocks.model.MoreComponentIDs;
 import net.runelite.api.Client;
 import net.runelite.api.widgets.Widget;
 
@@ -27,7 +28,7 @@ public class InterfaceUtil {
      */
     public static int getItemIdOrChildItemId(Widget widget) {
         if (widget == null) {
-            return -1;
+            return ItemUtil.INVALID_ITEM_ID;
         }
         int itemId = widget.getItemId();
 
@@ -39,6 +40,20 @@ public class InterfaceUtil {
             // Equipment tab has the item ID as the 2nd child.
             return children[1].getItemId();
         }
-        return -1;
+        return ItemUtil.INVALID_ITEM_ID;
+    }
+
+    /**
+     * Checks whether a widget is a child of a locked widget.
+     */
+    public static boolean isInLockedInterface(Widget widget, Client client) {
+        return InterfaceUtil.anyInterfaceContainsWidget(MoreComponentIDs.LOCKED_INTERFACES, widget, client);
+    }
+
+    /**
+     * Checks whether a widget is in a lockable interface.
+     */
+    public static boolean isInLockableInterface(Widget widget, Client client) {
+        return InterfaceUtil.anyInterfaceContainsWidget(MoreComponentIDs.LOCKABLE_INTERFACES, widget, client);
     }
 }

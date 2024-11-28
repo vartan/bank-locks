@@ -128,7 +128,7 @@ public class BankLocksPlugin extends Plugin {
     private int shouldPreventDepositAll(InventoryID id) {
         ItemContainer itemContainer = client.getItemContainer(id);
         if (itemContainer == null) {
-            return -1;
+            return ItemUtil.INVALID_ITEM_ID;
         }
         for (Item item : itemContainer.getItems()) {
             int itemId = item.getId();
@@ -136,7 +136,7 @@ public class BankLocksPlugin extends Plugin {
                 return itemId;
             }
         }
-        return -1;
+        return ItemUtil.INVALID_ITEM_ID;
     }
 
     /**
@@ -154,25 +154,12 @@ public class BankLocksPlugin extends Plugin {
         event.consume();
     }
 
-    /**
-     * Checks whether a widget is a child of a locked widget.
-     */
-    private boolean isInLockedInterface(Widget widget) {
-        return InterfaceUtil.anyInterfaceContainsWidget(MoreComponentIDs.LOCKED_INTERFACES, widget, client);
-    }
-
-    /**
-     * Checks whether a widget is in a lockable interface.
-     */
-    private boolean isInLockableInterface(Widget widget) {
-        return InterfaceUtil.anyInterfaceContainsWidget(MoreComponentIDs.LOCKABLE_INTERFACES, widget, client);
-    }
 
     /**
      * Returns the item ID if the widget clicked is a locked item in a locked interface.
      */
     private boolean shouldPreventDeposit(Widget widget, int itemId) {
-        if (!isInLockedInterface(widget)) {
+        if (!InterfaceUtil.isInLockedInterface(widget, client)) {
             return false;
         }
         return lockedItemIds.contains(itemId);
@@ -210,7 +197,7 @@ public class BankLocksPlugin extends Plugin {
         // TODO: Consider unlock-all right click on deposit-all buttons.
         int itemId = InterfaceUtil.getItemIdOrChildItemId(event.getMenuEntry().getWidget());
         if (!ItemUtil.isValidItemId(itemId)
-                || !isInLockableInterface(event.getMenuEntry().getWidget())) {
+                || !InterfaceUtil.isInLockableInterface(event.getMenuEntry().getWidget(), client)) {
             return;
         }
         String menuOption = lockedItemIds.contains(itemId) ? "Bank-unlock" : "Bank-lock";
