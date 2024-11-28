@@ -97,15 +97,17 @@ public class BankLocksPlugin extends Plugin {
     }
 
     private void preventDepositItem(MenuOptionClicked event, String option, Widget widget) {
+        if (!option.startsWith("Deposit") && !option.equalsIgnoreCase("Bank")) {
+            return;
+        }
+
         int itemId = InterfaceUtil.getItemIdOrChildItemId(event.getWidget());
         if (itemId < 0) {
             return;
         }
 
-        if (option.startsWith("Deposit") || option.equalsIgnoreCase("Bank")) {
-            if (shouldPreventDeposit(widget, itemId)) {
-                preventMenuOptionClicked(event, itemId);
-            }
+        if (shouldPreventDeposit(widget, itemId)) {
+            preventMenuOptionClicked(event, itemId);
         }
     }
 
@@ -209,6 +211,11 @@ public class BankLocksPlugin extends Plugin {
     @Subscribe
     public void onMenuEntryAdded(MenuEntryAdded event) {
         if (config.holdShiftForLockAndUnlock() && !client.isKeyPressed(KeyCode.KC_SHIFT)) {
+            return;
+        }
+        if(!event.getOption().contains("Examine")) {
+            // Exit early on "Examine" check, since it's a simple string operation.
+            // Other work below may take longer depending on the interface.
             return;
         }
         // TODO: Consider unlock-all right click on deposit-all buttons.
