@@ -23,10 +23,8 @@ import net.runelite.client.util.Text;
 
 import javax.inject.Inject;
 import java.awt.image.BufferedImage;
-import java.util.Arrays;
 import java.util.HashSet;
 import java.util.Set;
-import java.util.stream.Collectors;
 
 @Slf4j
 @PluginDescriptor(
@@ -153,7 +151,6 @@ public class BankLocksPlugin extends Plugin {
                 "Prevented depositing a locked item: " + itemName, null);
         event.consume();
     }
-
 
     /**
      * Returns the item ID if the widget clicked is a locked item in a locked interface.
