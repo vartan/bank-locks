@@ -25,7 +25,7 @@ public class BankLocksOverlay extends WidgetItemOverlay {
     public void renderItemOverlay(Graphics2D graphics, int itemId, WidgetItem widgetItem) {
         // Clamp opacity between 0-1.
         float opacity = (float) Math.max(0, Math.min(1, config.lockOpacity()));
-        if (opacity <= 0f || !plugin.getLockedItemIds().contains(itemId) || plugin.lockImage == null) {
+        if (opacity <= 0f || plugin.lockImage == null || !plugin.isItemLocked(itemId)) {
             return;
         }
 
