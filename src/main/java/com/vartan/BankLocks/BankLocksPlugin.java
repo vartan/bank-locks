@@ -49,6 +49,11 @@ public class BankLocksPlugin extends Plugin {
     private BankLocksOverlay overlay;
     @Inject
     private OverlayManager overlayManager;
+
+    /**
+     * Set of item IDs that should not be banked.
+     * This is persisted across sessions via (save|load)LockedItems methods.
+     */
     @Getter
     private Set<Integer> lockedItemIds = new HashSet<>();
 
