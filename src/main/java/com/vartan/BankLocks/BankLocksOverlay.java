@@ -35,7 +35,7 @@ public class BankLocksOverlay extends WidgetItemOverlay {
         int x = (int) location.getX();
         int y = (int) location.getY();
 
-        // Draw transparent lock over the item.
+        // Draw transparent lock over the bottom-right corner of the item.
         graphics.setFont(FontManager.getRunescapeSmallFont());
         AlphaComposite composite = AlphaComposite.getInstance(AlphaComposite.SRC_OVER, opacity);
         graphics.setComposite(composite);
