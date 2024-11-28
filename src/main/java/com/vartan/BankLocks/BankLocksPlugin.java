@@ -129,7 +129,7 @@ public class BankLocksPlugin extends Plugin {
     }
 
     private void preventDepositItem(MenuOptionClicked event, String option, Widget widget) {
-        if (!option.startsWith("Deposit") /* depositing from most interfaces*/
+        if (!option.startsWith("Deposit") /* depositing from most interfaces. */
                 && !option.equalsIgnoreCase("Bank") /* depositing from the equipment tab in the bank. */) {
             return;
         }
