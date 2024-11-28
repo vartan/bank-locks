@@ -85,6 +85,7 @@ public class BankLocksPlugin extends Plugin {
     public void onMenuOptionClicked(MenuOptionClicked event) {
         Widget widget = event.getMenuEntry().getWidget();
         if (widget == null) {
+            // Ignore any menu options that aren't from a widget.
             return;
         }
         String option = Text.removeTags(event.getMenuOption());
@@ -93,11 +94,11 @@ public class BankLocksPlugin extends Plugin {
         if (preventDepositAll(event, widgetId)) return;
 
         preventDepositItem(event, option, widget);
-
     }
 
     private void preventDepositItem(MenuOptionClicked event, String option, Widget widget) {
-        if (!option.startsWith("Deposit") && !option.equalsIgnoreCase("Bank")) {
+        if (!option.startsWith("Deposit") /* depositing from most interfaces*/
+                && !option.equalsIgnoreCase("Bank") /* depositing from the equipment tab in the bank. */) {
             return;
         }
 
@@ -213,7 +214,7 @@ public class BankLocksPlugin extends Plugin {
         if (config.holdShiftForLockAndUnlock() && !client.isKeyPressed(KeyCode.KC_SHIFT)) {
             return;
         }
-        if(!event.getOption().contains("Examine")) {
+        if (!event.getOption().contains("Examine")) {
             // Exit early on "Examine" check, since it's a simple string operation.
             // Other work below may take longer depending on the interface.
             return;

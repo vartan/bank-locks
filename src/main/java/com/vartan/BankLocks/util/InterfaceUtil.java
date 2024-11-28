@@ -18,13 +18,20 @@ public class InterfaceUtil {
         }
         return false;
     }
+
+    /**
+     * Gets the item ID from an interface widget, or from its second child.
+     *
+     * In most cases, the item ID is directly the widget returned by MenuOptionClicked. However, in the case of
+     * the equipment tab in the bank, the item ID is actually part of the widget's child at index 1.
+     */
     public static int getItemIdOrChildItemId(Widget widget) {
         if (widget == null) {
             return -1;
         }
         int itemId = widget.getItemId();
 
-        if (itemId > 0) {
+        if (itemId >= 0) {
             return itemId;
         }
         Widget[] children = widget.getChildren();
