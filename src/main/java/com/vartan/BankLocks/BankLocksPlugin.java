@@ -57,6 +57,11 @@ public class BankLocksPlugin extends Plugin {
     @Getter
     private Set<Integer> lockedItemIds = new HashSet<>();
 
+    @Provides
+    BankLocksConfig provideConfig(ConfigManager configManager) {
+        return configManager.getConfig(BankLocksConfig.class);
+    }
+
     @Override
     protected void startUp() throws Exception {
         overlayManager.add(overlay);
@@ -65,6 +70,48 @@ public class BankLocksPlugin extends Plugin {
     @Override
     protected void shutDown() throws Exception {
         overlayManager.remove(overlay);
+    }
+
+    @Subscribe
+    public void onGameStateChanged(GameStateChanged gameStateChanged) {
+        GameState gameState = gameStateChanged.getGameState();
+        if (gameState == GameState.LOGGED_IN) {
+            lockedItemIds = loader.loadLockedItems();
+            if (lockImage == null) {
+                lockImage = itemManager.getImage(ItemID.GOLD_LOCKS);
+            }
+        }
+    }
+
+    /**
+     * Adds "Bank-unlock" and "Bank-lock" options to items.
+     */
+    @Subscribe
+    public void onMenuEntryAdded(MenuEntryAdded event) {
+        if (config.holdShiftForLockAndUnlock() && !client.isKeyPressed(KeyCode.KC_SHIFT)) {
+            return;
+        }
+        if (!event.getOption().contains("Examine")) {
+            // Exit early on "Examine" check, since it's a simple string operation.
+            // Other work below may take longer depending on the interface.
+            return;
+        }
+        // TODO: Consider unlock-all right click on deposit-all buttons.
+        int itemId = InterfaceUtil.getItemIdOrChildItemId(event.getMenuEntry().getWidget());
+        if (!ItemUtil.isValidItemId(itemId)
+                || !InterfaceUtil.isInLockableInterface(event.getMenuEntry().getWidget(), client)) {
+            return;
+        }
+        String menuOption = lockedItemIds.contains(itemId) ? "Bank-unlock" : "Bank-lock";
+        client.createMenuEntry(-1)
+                .setOption(menuOption)
+                .setTarget(event.getTarget())
+                .setType(MenuAction.RUNELITE)
+                .onClick(e ->
+                {
+                    SetUtil.toggleItem(lockedItemIds, itemId);
+                    loader.saveLockedItems(lockedItemIds);
+                });
     }
 
     @Subscribe()
@@ -160,52 +207,5 @@ public class BankLocksPlugin extends Plugin {
             return false;
         }
         return lockedItemIds.contains(itemId);
-    }
-
-    @Subscribe
-    public void onGameStateChanged(GameStateChanged gameStateChanged) {
-        GameState gameState = gameStateChanged.getGameState();
-        if (gameState == GameState.LOGGED_IN) {
-            lockedItemIds = loader.loadLockedItems();
-            if (lockImage == null) {
-                lockImage = itemManager.getImage(ItemID.GOLD_LOCKS);
-            }
-        }
-    }
-
-    @Provides
-    BankLocksConfig provideConfig(ConfigManager configManager) {
-        return configManager.getConfig(BankLocksConfig.class);
-    }
-
-    /**
-     * Adds "Bank-unlock" and "Bank-lock" options to items.
-     */
-    @Subscribe
-    public void onMenuEntryAdded(MenuEntryAdded event) {
-        if (config.holdShiftForLockAndUnlock() && !client.isKeyPressed(KeyCode.KC_SHIFT)) {
-            return;
-        }
-        if (!event.getOption().contains("Examine")) {
-            // Exit early on "Examine" check, since it's a simple string operation.
-            // Other work below may take longer depending on the interface.
-            return;
-        }
-        // TODO: Consider unlock-all right click on deposit-all buttons.
-        int itemId = InterfaceUtil.getItemIdOrChildItemId(event.getMenuEntry().getWidget());
-        if (!ItemUtil.isValidItemId(itemId)
-                || !InterfaceUtil.isInLockableInterface(event.getMenuEntry().getWidget(), client)) {
-            return;
-        }
-        String menuOption = lockedItemIds.contains(itemId) ? "Bank-unlock" : "Bank-lock";
-        client.createMenuEntry(-1)
-                .setOption(menuOption)
-                .setTarget(event.getTarget())
-                .setType(MenuAction.RUNELITE)
-                .onClick(e ->
-                {
-                    SetUtil.toggleItem(lockedItemIds, itemId);
-                    loader.saveLockedItems(lockedItemIds);
-                });
     }
 }
