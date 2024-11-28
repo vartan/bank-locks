@@ -4,6 +4,7 @@ import com.google.inject.Provides;
 import com.vartan.BankLocks.model.MoreComponentIDs;
 import com.vartan.BankLocks.model.SoundEffects;
 import com.vartan.BankLocks.util.InterfaceUtil;
+import com.vartan.BankLocks.util.ItemUtil;
 import com.vartan.BankLocks.util.SetUtil;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
@@ -126,7 +127,7 @@ public class BankLocksPlugin extends Plugin {
                 return false;
             }
             int itemId = shouldPreventDepositAll(inventoryID);
-            if (itemId >= 0) {
+            if (ItemUtil.isValidItemId(itemId)) {
                 preventMenuOptionClicked(event, itemId);
                 return true;
             }
@@ -221,9 +222,8 @@ public class BankLocksPlugin extends Plugin {
         }
         // TODO: Consider unlock-all right click on deposit-all buttons.
         int itemId = InterfaceUtil.getItemIdOrChildItemId(event.getMenuEntry().getWidget());
-        if (itemId < 0
-                || !isInLockableInterface(event.getMenuEntry().getWidget())
-                || !event.getOption().contains("Examine")) {
+        if (!ItemUtil.isValidItemId(itemId)
+                || !isInLockableInterface(event.getMenuEntry().getWidget())) {
             return;
         }
         String menuOption = lockedItemIds.contains(itemId) ? "Bank-unlock" : "Bank-lock";

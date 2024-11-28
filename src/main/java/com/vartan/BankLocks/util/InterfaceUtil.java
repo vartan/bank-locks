@@ -31,7 +31,7 @@ public class InterfaceUtil {
         }
         int itemId = widget.getItemId();
 
-        if (itemId >= 0) {
+        if (ItemUtil.isValidItemId(itemId)) {
             return itemId;
         }
         Widget[] children = widget.getChildren();
