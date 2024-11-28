@@ -49,6 +49,8 @@ public class BankLocksPlugin extends Plugin {
     private BankLocksOverlay overlay;
     @Inject
     private OverlayManager overlayManager;
+    @Inject
+    private BankLocksLoader loader;
 
     /**
      * Set of item IDs that should not be banked.
@@ -65,26 +67,6 @@ public class BankLocksPlugin extends Plugin {
     @Override
     protected void shutDown() throws Exception {
         overlayManager.remove(overlay);
-    }
-
-    private void saveLockedItems() {
-        String commaSeparatedItemIds = lockedItemIds
-                .stream()
-                .map(String::valueOf)
-                .collect(Collectors.joining(","));
-        configManager.setConfiguration(BankLocksConfig.CONFIG_GROUP,
-                BankLocksConfig.LOCKED_ITEMS_CONFIG_NAME,
-                commaSeparatedItemIds);
-    }
-
-    private void loadLockedItems() {
-        String commaSeparatedItemIds = configManager.getConfiguration(BankLocksConfig.CONFIG_GROUP,
-                BankLocksConfig.LOCKED_ITEMS_CONFIG_NAME);
-        if (commaSeparatedItemIds != null) {
-            lockedItemIds = Arrays.stream(commaSeparatedItemIds.split(","))
-                    .map(Integer::parseInt)
-                    .collect(Collectors.toSet());
-        }
     }
 
     @Subscribe()
@@ -200,7 +182,7 @@ public class BankLocksPlugin extends Plugin {
     public void onGameStateChanged(GameStateChanged gameStateChanged) {
         GameState gameState = gameStateChanged.getGameState();
         if (gameState == GameState.LOGGED_IN) {
-            loadLockedItems();
+            lockedItemIds = loader.loadLockedItems();
             if (lockImage == null) {
                 lockImage = itemManager.getImage(ItemID.GOLD_LOCKS);
             }
@@ -239,7 +221,7 @@ public class BankLocksPlugin extends Plugin {
                 .onClick(e ->
                 {
                     SetUtil.toggleItem(lockedItemIds, itemId);
-                    saveLockedItems();
+                    loader.saveLockedItems(lockedItemIds);
                 });
     }
 }
