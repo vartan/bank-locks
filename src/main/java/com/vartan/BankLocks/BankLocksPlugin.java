@@ -6,7 +6,6 @@ import com.vartan.BankLocks.model.SoundEffects;
 import com.vartan.BankLocks.util.InterfaceUtil;
 import com.vartan.BankLocks.util.ItemUtil;
 import com.vartan.BankLocks.util.SetUtil;
-import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 import net.runelite.api.*;
 import net.runelite.api.events.GameStateChanged;
@@ -58,6 +57,7 @@ public class BankLocksPlugin extends Plugin {
 
     @Provides
     BankLocksConfig provideConfig(ConfigManager configManager) {
+        // Allows BankLocksConfig to be easily injected into other classes.
         return configManager.getConfig(BankLocksConfig.class);
     }
 
