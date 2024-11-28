@@ -91,7 +91,7 @@ public class BankLocksPlugin extends Plugin {
         }
 
         int itemId = InterfaceUtil.getItemIdOrChildItemId(event.getWidget());
-        if (itemId < 0) {
+        if (!ItemUtil.isValidItemId(itemId)) {
             return;
         }
 
